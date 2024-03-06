@@ -18,3 +18,10 @@ python3 -m venv venv
 source venv/bin/activate  # On Windows use venv\Scripts\activate
 pip install flask pandas yfinance plotly
 python app.py
+```
+## Screenshots
+
+![alt text](https://i.imgur.com/BgwqS0w.png "Upload Menu")
+![alt text](https://i.imgur.com/hdKqlua.png "Trade Analyser")
+
+
