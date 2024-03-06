@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Data</title>
+</head>
+<body>
+    <nav>
+        <ul class="nav-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/lastviewed">Last Viewed</a></li>
+            <li><a href="https://github.com/s1lven/StockAnalyser">Source Code</a></li>
+        </ul>
+    </nav>
+    <div class="content-wrapper">
+        <div class="table-wrapper">
+            <table>
+                <tbody>
+                    {% for table in tables %}
+                        {{ table|safe }}
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="returns-section">
+                <h2>Overall ROI of All Stocks/ETFs: <span class="value">{{ etf_roi }}</span></h2>
+                <h2>Overall SPY Return: <span class="value">{{ overall_spy_return }}</span></h2>
+            </div>
+        </div>
+        <div class="info-graph-wrapper">
+            <div class="graph-section">
+                <div id="plotly-graph"></div>
+                <div class="graph-section">
+                <div id="plotly-graph-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+    </footer>
+    <!-- Inside the <script> tag at the end of the file -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // ... (your existing JavaScript code)
+
+        // Parse the JSON string containing the Plotly graph data
+        const graphData = {{ graph_json | tojson | safe }};
+
+        // Render the Plotly graph inside the specified div
+        Plotly.newPlot('plotly-graph', JSON.parse(graphData));
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const graphData = {{ graph_json | tojson | safe }};
+        Plotly.newPlot('plotly-graph', JSON.parse(graphData));
+    
+        // Additional code for rendering the second graph
+        const graph2Data = {{ graph2_json | tojson | safe }};
+        Plotly.newPlot('plotly-graph-2', JSON.parse(graph2Data)); // Ensure there's a div with id='plotly-graph-2' in the HTML
+    });
+    </script>
+    
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Function to apply color based on the value
+            function applyColor(element, value) {
+                if (value > 0) {
+                    element.style.color = '#4CAF50'; // Green for positive values
+                } else if (value < 0) {
+                    element.style.color = '#F44336'; // Red for negative values
+                } else {
+                    element.style.color = '#000000'; // White for zero values
+                }
+            }
+        
+            // Style the cells in the "Return" and "SPY Return" columns
+            const tableRows = document.querySelectorAll('table tbody tr');
+            tableRows.forEach(row => {
+                const cells = row.cells;
+                for (let i = 0; i < cells.length; i++) {
+                    const cell = cells[i];
+                    const header = document.querySelector(`table thead th:nth-child(${i + 1})`);
+                    if (header && (header.innerText.trim() === 'Return' || header.innerText.trim() === 'SPY Return')) {
+                        // Ensure parsing keeps the sign of the number
+                        const valueText = cell.innerText.replace(/[+%]/g, ''); // Remove % and +, but keep -
+                        const value = parseFloat(valueText);
+                        if (!isNaN(value)) { // Check if the parsed value is a number
+                            applyColor(cell, value);
+                        }
+                    }
+                }
+            });
+        
+            // Style the overall return values
+            document.querySelectorAll('.returns-section .value').forEach(span => {
+                const valueText = span.textContent.replace(/[+%]/g, ''); // Remove % and +, but keep -
+                const value = parseFloat(valueText);
+                if (!isNaN(value)) { // Check if the parsed value is a number
+                    applyColor(span, value);
+                }
+            });
+        });
+        </script>
+
+
+<style>
+    body {
+        font-family: 'Roboto Mono', sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background-color: #f4f4f4;
+    }
+    nav {
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+        display: flex;
+        justify-content: center;
+        height: 60px;
+    }
+    .nav-links {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        font-weight: 100;
+    }
+    .nav-links li {
+        margin-right: 25px;
+    }
+    .nav-links a {
+        text-decoration: none;
+        color: #fff;
+        font-weight: bold;
+    }
+    .nav-links a:hover {
+        text-decoration: none;
+        color: #4165c5;
+        font-weight: bold;
+    }
+    .content-wrapper {
+        margin-top: 35px;
+        display: flex;
+        flex: 1;
+        background-color: #f4f4f4;
+    }
+    .table-wrapper {
+        flex: 1;
+        margin-right: 20px;
+        margin-left: 20px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    th, td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #eaeaea;
+    }
+    th {
+        background-color: #3498db;
+        color: #ffffff;
+        font-weight: 500;
+    }
+    tr:nth-child(odd) {
+        background-color: #f9f9f9;
+    }
+    tr:hover {
+        background-color: #f2f2f2;
+    }
+    .info-graph-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background-color: #f4f4f4;
+        margin-right: 20px; /* Adds margin to the right */
+    }
+    .graph-section {
+        border: 1px solid #ddd; /* Single border around each graph */
+        margin-bottom: 20px; /* Adds margin between the graphs */
+        padding: 10px; /* Padding inside each graph section */
+    }
+    .footer {
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 10px;
+    }
+</style>
+
+
+
+
+
+</body>
+</html>
